@@ -1,0 +1,93 @@
+#include <Servo.h>
+
+Servo myServo;
+const int piezo = A0; 
+const int switchPin = 2; 
+const int yellowLed = 3; 
+const int greenLed = 4; 
+const int redLed = 5; 
+int knockVal; 
+int switchVal; 
+const int quietKnock = 10;
+const int loudKnock = 100;
+boolean locked = false;
+int numberOfKnocks = 0;
+int buttonState = 0; 
+
+void setup(){
+  myServo.attach(9);          // Atașează servo-ul la pinul 9
+  pinMode(yellowLed, OUTPUT); // LED galben
+  pinMode(redLed, OUTPUT);    // LED roșu
+  pinMode(greenLed, OUTPUT);  // LED verde
+  pinMode(switchPin, INPUT);  // Pinul pentru buton
+  Serial.begin(9600);         // Inițializează comunicația serială
+  digitalWrite(greenLed, HIGH); // Aprinde LED verde (boxa este deblocată)
+  myServo.write(0);            // Setează servo-ul la poziția 0
+  Serial.println("The box is unlocked!"); // Mesaj de status
+  
+  pinMode(3, OUTPUT); // LED verde
+  pinMode(4, OUTPUT); // LED roșu
+  pinMode(5, OUTPUT); // LED roșu
+  pinMode(2, INPUT);  // Buton
+}
+
+void loop(){
+  // Se verifică starea blocării/deschiderii
+  if (locked == false){ 
+    switchVal = digitalRead(switchPin);  // Citirea stării butonului
+    
+    if(switchVal == HIGH){  // Dacă butonul este apăsat
+      locked = true;         // Blochează boxa
+      digitalWrite(greenLed, LOW);   // Stinge LED verde
+      digitalWrite(redLed, HIGH);    // Aprinde LED roșu
+      myServo.write(90);          // Poziționează servo-ul la 90°
+      Serial.println("The box is locked!");  // Mesaj de status
+      delay(1000);                // Așteaptă 1 secundă
+    }
+  }
+
+  if(locked == true){  // Dacă boxa este blocată
+    knockVal = analogRead(piezo); // Citirea semnalului de la piezo
+    if(numberOfKnocks < 3 && knockVal > 0){ // Dacă nu au fost 3 lovituri
+      if(checkForKnock(knockVal) == true){ // Verifică dacă knock-ul este valid
+        numberOfKnocks++;    // Incrementarea numărului de lovituri
+      }
+      Serial.print(3 - numberOfKnocks); // Afișează câte lovituri mai sunt necesare
+      Serial.println(" more knocks to go");
+    }
+
+    if(numberOfKnocks >= 3){ // Dacă s-au înregistrat 3 lovituri
+      locked = false;         // Deblochează boxa
+      myServo.write(0);       // Setează servo-ul în poziția 0
+      delay(20);              // Mică întârziere
+      digitalWrite(greenLed, HIGH);  // Aprinde LED verde
+      digitalWrite(redLed, LOW);     // Stinge LED roșu
+      Serial.println("The box is unlocked!"); // Mesaj de status
+    }
+  }
+
+  // Logica butonului și a LED-urilor
+  buttonState = digitalRead(2);  // Citirea stării butonului
+  if (buttonState == LOW) {  // Dacă butonul nu este apăsat
+    digitalWrite(3, HIGH);   // LED verde aprins
+    digitalWrite(4, LOW);    // LED roșu stins
+    digitalWrite(5, LOW);    // LED roșu stins
+  } 
+  else {  // Dacă butonul este apăsat
+    digitalWrite(3, LOW);    // LED verde stins
+    digitalWrite(4, LOW);    // LED roșu stins
+    digitalWrite(5, HIGH);   // LED roșu aprins
+    delay(250);              // Așteaptă un sfert de secundă
+    digitalWrite(4, HIGH);   // LED galben aprins
+    digitalWrite(5, LOW);    // LED roșu stins
+    delay(250);              // Așteaptă un sfert de secundă
+  } 
+}
+
+// Funcția de verificare a knock-ului
+bool checkForKnock(int knockValue) {
+  if(knockValue > quietKnock && knockValue < loudKnock) {
+    return true;
+  }
+  return false;
+}
