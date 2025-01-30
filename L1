@@ -1,0 +1,89 @@
+void setup(){
+}
+void loop(){
+}
+int switchState = 0;
+void setup(){
+ pinMode(3,OUTPUT);
+ pinMode(4,OUTPUT);
+ pinMode(5,OUTPUT);
+ pinMode(2,INPUT);
+}
+void loop(){
+ switchState = digitalRead(2);
+ // this is a commen
+if (switchState == LOW) { 
+ // the buton is not pressed
+ digitalWrite(3, HIGH); // green LED
+ digitalWrite(4, LOW); // red LED
+ digitalWrite(5, LOW); // red LED
+ } 
+ else { // the buton is pressed
+ digitalWrite(3, LOW); 
+ digitalWrite(4, LOW);
+ digitalWrite(5, HIGH);
+ delay(250); // wait for a quarter second
+ // toggle the LEDs
+ digitalWrite(4, HIGH); 
+ digitalWrite(5, LOW);
+ delay(250); // wait for a quarter second
+ } 
+} // go back to the beginning of the loop
+………………………………………………………………………….
+2222222222222222
+#include <Servo.h>
+Servo myServo;
+const int piezo = A0; 
+const int switchPin = 2; 
+const int yellowLed = 3; 
+const int greenLed = 4; 
+const int redLed = 5; 
+int knockVal; 
+int switchVal; 
+const int quietKnock = 10;
+const int loudKnock = 100;
+boolean locked = false;
+int numberOfKnocks = 0;
+void setup(){ 
+ myServo.atach(9);
+ pinMode(yellowLed, OUTPUT);
+ pinMode(redLed, OUTPUT);
+ pinMode(greenLed, OUTPUT);
+ pinMode(switchPin, INPUT);
+ Serial.begin(9600);
+ digitalWrite(greenLed, HIGH);
+ myServo.write(0); 
+ Serial.println(“The box is unlocked!”); 
+}
+void loop(){
+ if(locked == false){ 
+ switchVal = digitalRead(switchPin)
+if(switchVal == HIGH){ 
+ locked = true; 
+ digitalWrite(greenLed,LOW); 
+ digitalWrite(redLed,HIGH); 
+ myServo.write(90); 
+ Serial.println(“The box is locked!”); 
+ delay (1000);
+ }
+ }
+ if(locked == true){
+ knockVal = analogRead(piezo); 
+ if(numberOfKnocks < 3 && knockVal > 0){ 
+ if(checkForKnock(knockVal) == true){
+ numberOfKnocks++;
+ } 
+ Serial.print(3-numberOfKnocks); 
+ Serial.println(“ more knocks to go”); 
+ }
+ if(numberOfKnocks >= 3){ 
+ locked = false; 
+ myServo.write(0); 
+ delay(20); 
+ digitalWrite(greenLed,HIGH); 
+ digitalWrite(redLed,LOW); 
+ Serial.println(“The box is unlocked!”); 
+ }
+ }
+}
+boolean checkForKnock(int value) { 
